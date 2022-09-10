@@ -5,20 +5,24 @@ ServerSideTcp::ServerSideTcp(QObject *parent)
 {
 
     //start listening on port
-    if(MyServer.listen(QHostAddress::Any ,45000)){
-        qInfo()<<"server start listening now";
-    }
+
 
     //notify when a lient is connected to myserver  using signal and slots
     connect(&MyServer ,&QTcpServer::newConnection ,this ,&ServerSideTcp::onNewConnection);
 
     //connect to the signal
     connect(this,&ServerSideTcp::newMessage ,this ,&ServerSideTcp::onNewMessage);
+
+    if(MyServer.listen(QHostAddress::Any ,45000)){
+        qInfo()<<"server start listening now";
+    }
 }
 
 void ServerSideTcp::sendMessage(const QString &message)
 {
+
     emit newMessage("Server :" + message.toUtf8());
+
 
 }
 
@@ -35,9 +39,15 @@ void ServerSideTcp::onNewConnection()
 //    //save the client ip and port
 //    QString clientKey =getClientKey(client);
 
+    //add new client to my list
+    MyClients.insert(this->getClientKey(client), client);
+
+
     //when client is disconnected
     //when client send a message we use signal readyread to read it
     connect(client , &QTcpSocket::readyRead ,this ,&ServerSideTcp::onReadyRead);
+    connect(client, &QTcpSocket::disconnected, this, &ServerSideTcp::onClientDisconnected);
+
 
 }
 
@@ -56,9 +66,25 @@ void ServerSideTcp::onReadyRead()
 
 void ServerSideTcp::onNewMessage(const QByteArray &ba)
 {
+    //loop in the clients list and get messagees
+    for(const auto &client : qAsConst(MyClients)) {
 
     //write the message to the client
-    MyClient.write(ba);
+    client->write(ba);
+    client->flush();
+
+    }
+}
+
+void ServerSideTcp::onClientDisconnected()
+{
+    const auto client = qobject_cast<QTcpSocket*>(sender());
+
+    if(client == nullptr) {
+        return;
+    }
+
+    MyClients.remove(this->getClientKey(client));
 }
 
 QString ServerSideTcp::getClientKey(const QTcpSocket *client)const

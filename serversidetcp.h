@@ -4,6 +4,8 @@
 #include <QObject>
 #include<QTcpServer>
 #include<QTcpSocket>
+#include <QHash>
+
 
 class ServerSideTcp : public QObject
 {
@@ -21,13 +23,14 @@ private slots:
     void onNewConnection();   //when connect to the client
     void onReadyRead();    //when read messages from client
     void onNewMessage(const QByteArray &ba);   //when add rx message
+    void onClientDisconnected();
 
 
 private:
     QString getClientKey(const QTcpSocket *client)const;
 private:
     QTcpServer MyServer;
-    QTcpSocket MyClient;
+    QHash<QString, QTcpSocket*> MyClients;  //list od clients
 
 };
 

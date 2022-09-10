@@ -15,7 +15,7 @@ Window {
         //define a fun to connect to signal newNewMessage
         function onNewMessage(ba){
             listOfMessages.append({
-                                      message:ba+""
+                                      message: ba +""
                                   })
         }
     }
@@ -25,6 +25,7 @@ Window {
         ListView{
             Layout.fillHeight: true
             Layout.fillWidth: true
+            clip: true
             model: ListModel{         //to view our messages from the client
                 id:listOfMessages
                 ListElement{
